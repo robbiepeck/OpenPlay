@@ -25,8 +25,9 @@ export const gameCards: GameCard[] = [
     tagline: "Pattern recognition under pressure.",
     description:
       "A clean deduction board with flags, reveals, and that satisfying last-safe-cell moment.",
-    status: "Coming soon",
+    status: "Playable now",
     accent: "var(--accent-mint)",
+    path: "/games/minesweeper",
   },
   {
     slug: "snake",
@@ -34,7 +35,8 @@ export const gameCards: GameCard[] = [
     tagline: "Pure arcade flow on a neon grid.",
     description:
       "Fast, readable, and endlessly replayable. The kind of game that still wins a spare five minutes.",
-    status: "Coming soon",
+    status: "Playable now",
     accent: "var(--accent-cyan)",
+    path: "/games/snake",
   },
 ];

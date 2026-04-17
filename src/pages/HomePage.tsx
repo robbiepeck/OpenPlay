@@ -26,12 +26,12 @@ export function HomePage() {
 
         <div className="hero-display" aria-hidden="true">
           <div className="hero-stat-card">
-            <span>Now live</span>
-            <strong>2048</strong>
+            <span>Playable now</span>
+            <strong>3 games</strong>
           </div>
           <div className="hero-stat-card">
-            <span>In build queue</span>
-            <strong>2 more</strong>
+            <span>Arcade type</span>
+            <strong>Open & free</strong>
           </div>
           <div className="hero-grid-preview">
             <span>2</span>
@@ -65,9 +65,8 @@ export function HomePage() {
             its own space while still feeling part of one public arcade.
           </p>
           <p>
-            This first release focuses on a single complete game, a distinct visual
-            identity, and a structure that can take on Minesweeper, Snake, and
-            whatever simple classics come next.
+            This first release already includes 2048, Minesweeper, and Snake, with
+            the project structure ready for whatever simple classics come next.
           </p>
         </div>
       </section>

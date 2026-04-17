@@ -1,6 +1,8 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
+  AnimatedTile,
   Board,
+  Direction,
   addRandomTile,
   createStartingBoard,
   getHighestTile,
@@ -21,10 +23,16 @@ function resolveStatus(board: Board): GameStatus {
 }
 
 export function use2048Game() {
-  const [board, setBoard] = useState<Board>(() => createStartingBoard());
+  const startingState = useMemo(() => createStartingBoard(), []);
+  const [board, setBoard] = useState<Board>(() => startingState.board);
+  const [animatedTiles, setAnimatedTiles] = useState<AnimatedTile[]>(
+    () => startingState.animatedTiles,
+  );
   const [score, setScore] = useState(0);
   const [bestScore, setBestScore] = useState(0);
-  const [status, setStatus] = useState<GameStatus>(() => resolveStatus(board));
+  const [status, setStatus] = useState<GameStatus>(() =>
+    resolveStatus(startingState.board),
+  );
 
   useEffect(() => {
     setStatus(resolveStatus(board));
@@ -35,13 +43,14 @@ export function use2048Game() {
   }, [score]);
 
   function resetGame() {
-    const nextBoard = createStartingBoard();
-    setBoard(nextBoard);
+    const nextState = createStartingBoard();
+    setBoard(nextState.board);
+    setAnimatedTiles(nextState.animatedTiles);
     setScore(0);
-    setStatus(resolveStatus(nextBoard));
+    setStatus(resolveStatus(nextState.board));
   }
 
-  function handleMove(direction: "up" | "down" | "left" | "right") {
+  function handleMove(direction: Direction) {
     if (status === "lost") {
       return;
     }
@@ -52,13 +61,19 @@ export function use2048Game() {
       return;
     }
 
-    const nextBoard = addRandomTile(result.board);
-    setBoard(nextBoard);
+    const withSpawn = addRandomTile(result.board);
+    setBoard(withSpawn.board);
+    setAnimatedTiles(
+      withSpawn.spawnedTile
+        ? [...result.animatedTiles, withSpawn.spawnedTile]
+        : result.animatedTiles,
+    );
     setScore((current) => current + result.scoreDelta);
   }
 
   return {
     board,
+    animatedTiles,
     score,
     bestScore,
     status,

@@ -26,8 +26,16 @@ function getStatusMessage(status: "playing" | "won" | "lost") {
 }
 
 export function Twenty48Game() {
-  const { board, score, bestScore, status, highestTile, resetGame, handleMove } =
-    use2048Game();
+  const {
+    board,
+    animatedTiles,
+    score,
+    bestScore,
+    status,
+    highestTile,
+    resetGame,
+    handleMove,
+  } = use2048Game();
 
   useEffect(() => {
     function onKeyDown(event: KeyboardEvent) {
@@ -63,20 +71,43 @@ export function Twenty48Game() {
       </div>
 
       <div className="board-stage">
-        <div
-          className="board-grid"
-          role="application"
-          aria-label="2048 game board"
-          style={{ gridTemplateColumns: `repeat(${GRID_SIZE}, minmax(0, 1fr))` }}
-        >
-          {board.flat().map((cell, index) => (
-            <div
-              className={`board-cell ${cell ? `tile-${cell.value}` : "empty"}`}
-              key={cell?.id ?? `empty-${index}`}
-            >
-              {cell?.value ?? ""}
-            </div>
-          ))}
+        <div className="board-shell">
+          <div
+            className="board-grid board-grid-background"
+            role="application"
+            aria-label="2048 game board"
+            style={{ gridTemplateColumns: `repeat(${GRID_SIZE}, minmax(0, 1fr))` }}
+          >
+            {board.flat().map((cell, index) => (
+              <div
+                className={`board-cell ${cell ? `tile-${cell.value}` : "empty"}`}
+                key={cell?.id ?? `empty-${index}`}
+              >
+                {!cell ? "" : ""}
+              </div>
+            ))}
+          </div>
+
+          <div className="tile-layer" aria-hidden="true">
+            {animatedTiles.map((tile) => (
+              <div
+                className={`board-tile tile-${tile.value} ${tile.isNew ? "spawn" : ""} ${
+                  tile.isMerged ? "merge-flash" : ""
+                }`}
+                key={tile.id}
+                style={
+                  {
+                    "--tile-row": tile.row,
+                    "--tile-col": tile.col,
+                    "--from-row": tile.fromRow,
+                    "--from-col": tile.fromCol,
+                  } as React.CSSProperties
+                }
+              >
+                {tile.value}
+              </div>
+            ))}
+          </div>
         </div>
 
         <div className={`status-banner ${status}`}>

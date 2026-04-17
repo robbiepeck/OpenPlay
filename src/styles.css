@@ -479,6 +479,11 @@ button {
   gap: 20px;
 }
 
+.arcade-layout {
+  display: grid;
+  gap: 20px;
+}
+
 .score-strip {
   flex-wrap: wrap;
 }
@@ -509,6 +514,11 @@ button {
   gap: 18px;
 }
 
+.board-shell {
+  position: relative;
+  aspect-ratio: 1;
+}
+
 .board-grid {
   display: grid;
   gap: 12px;
@@ -518,6 +528,10 @@ button {
     linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.02)),
     rgba(4, 10, 16, 0.8);
   border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.board-grid-background {
+  height: 100%;
 }
 
 .board-cell {
@@ -536,6 +550,40 @@ button {
 
 .board-cell.empty {
   border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.tile-layer {
+  --grid-gap: 12px;
+  --tile-size: calc((100% - (var(--grid-gap) * 3)) / 4);
+  position: absolute;
+  inset: 16px;
+  pointer-events: none;
+}
+
+.board-tile {
+  position: absolute;
+  left: calc(var(--tile-col) * (var(--tile-size) + var(--grid-gap)));
+  top: calc(var(--tile-row) * (var(--tile-size) + var(--grid-gap)));
+  display: grid;
+  place-items: center;
+  width: var(--tile-size);
+  height: var(--tile-size);
+  border-radius: 20px;
+  font-size: clamp(1.4rem, 3vw, 2.5rem);
+  font-weight: 800;
+  animation:
+    tile-slide 170ms ease,
+    tile-pop 180ms ease;
+}
+
+.board-tile.spawn {
+  animation:
+    tile-pop 220ms ease,
+    tile-glow 500ms ease;
+}
+
+.board-tile.merge-flash {
+  box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.08);
 }
 
 .tile-2 {
@@ -596,6 +644,12 @@ button {
   padding: 18px 20px;
 }
 
+.status-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
 .status-banner p {
   margin: 0;
   color: var(--text);
@@ -635,6 +689,131 @@ button {
 .control-buttons {
   flex-wrap: wrap;
   justify-content: flex-end;
+}
+
+.difficulty-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.difficulty-chip {
+  min-height: 42px;
+  padding: 0 16px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--muted);
+}
+
+.difficulty-chip.active {
+  border-color: rgba(255, 191, 92, 0.55);
+  background: rgba(255, 191, 92, 0.12);
+  color: var(--text);
+}
+
+.mine-grid,
+.snake-grid {
+  display: grid;
+  gap: 6px;
+  padding: 14px;
+  border-radius: 28px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.02)),
+    rgba(4, 10, 16, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.mine-cell {
+  display: grid;
+  place-items: center;
+  aspect-ratio: 1;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text);
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.mine-cell img {
+  width: 70%;
+  height: 70%;
+  object-fit: contain;
+}
+
+.mine-cell.revealed {
+  background: rgba(137, 240, 199, 0.12);
+  border-color: rgba(137, 240, 199, 0.18);
+}
+
+.mine-cell.flagged {
+  color: var(--accent-gold);
+}
+
+.mine-cell.mine {
+  background: rgba(255, 122, 89, 0.28);
+  border-color: rgba(255, 122, 89, 0.45);
+}
+
+.snake-grid {
+  gap: 4px;
+}
+
+.snake-cell {
+  aspect-ratio: 1;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.snake-cell.snake {
+  background: linear-gradient(135deg, rgba(86, 212, 255, 0.88), rgba(137, 240, 199, 0.76));
+}
+
+.snake-cell.head {
+  background: linear-gradient(135deg, #ffbf5c, #ff7a59);
+}
+
+.snake-cell.food {
+  background: #ff6f91;
+  box-shadow: 0 0 0 3px rgba(255, 111, 145, 0.18);
+}
+
+@keyframes tile-slide {
+  from {
+    transform: translate(
+      calc((var(--from-col) - var(--tile-col)) * (var(--tile-size) + var(--grid-gap))),
+      calc((var(--from-row) - var(--tile-row)) * (var(--tile-size) + var(--grid-gap)))
+    );
+  }
+
+  to {
+    transform: translate(0, 0);
+  }
+}
+
+@keyframes tile-pop {
+  0% {
+    transform: scale(0.8);
+  }
+
+  70% {
+    transform: scale(1.06);
+  }
+
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes tile-glow {
+  0% {
+    box-shadow: 0 0 0 0 rgba(255, 191, 92, 0.42);
+  }
+
+  100% {
+    box-shadow: 0 0 0 14px rgba(255, 191, 92, 0);
+  }
 }
 
 @media (max-width: 980px) {
@@ -696,5 +875,9 @@ button {
   .status-banner {
     flex-direction: column;
     align-items: stretch;
+  }
+
+  .status-actions {
+    width: 100%;
   }
 }
