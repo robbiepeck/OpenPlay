@@ -10,6 +10,16 @@ export type GameCard = {
 
 export const gameCards: GameCard[] = [
   {
+    slug: "gba mod",
+    title: "Pokemon FireRed: Brisbane Edition",
+    tagline: "Kanto rerouted through the river city.",
+    description:
+      "A local-only FireRed cabinet rebuilt for OpenPlay with Brisbane suburb names and Andrew Peck in Professor Oak's chair.",
+    status: "Playable now",
+    accent: "var(--accent-coral)",
+    path: "/games/pokemon-brisbane",
+  },
+  {
     slug: "2048",
     title: "2048",
     tagline: "Fuse tiles. Build momentum. Chase impossible numbers.",
