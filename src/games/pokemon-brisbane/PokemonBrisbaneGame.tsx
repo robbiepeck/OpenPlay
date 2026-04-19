@@ -1,9 +1,8 @@
 import mGBA, { type mGBAEmulator } from "@thenick775/mgba-wasm";
 import { useEffect, useRef, useState } from "react";
-import { brisbaneTownMappings } from "./brisbaneMappings";
-
 const LOCAL_ROM_PATH = "/local-roms/pokemon-fire-red-brisbane.gba";
 const LOCAL_ROM_FILE_NAME = "pokemon-fire-red-brisbane.gba";
+const EMULATOR_BOOT_TIMEOUT_MS = 12000;
 
 const keyboardShortcuts = [
   { action: "Move", shortcut: "Arrow keys" },
@@ -14,6 +13,17 @@ const keyboardShortcuts = [
 ];
 
 type LoadState = "booting" | "loading" | "ready" | "error";
+
+type RuntimeDiagnostic = {
+  label: string;
+  value: string;
+};
+
+type RuntimeSupport = {
+  diagnostics: RuntimeDiagnostic[];
+  isSupported: boolean;
+  message?: string;
+};
 
 type TouchControlProps = {
   label: string;
@@ -26,6 +36,112 @@ type TouchControlProps = {
 function uploadRom(emulator: mGBAEmulator, file: File) {
   return new Promise<void>((resolve) => {
     emulator.uploadRom(file, resolve);
+  });
+}
+
+function checkModuleWorkerSupport() {
+  if (
+    typeof Worker === "undefined" ||
+    typeof Blob === "undefined" ||
+    typeof URL === "undefined" ||
+    typeof URL.createObjectURL !== "function" ||
+    typeof URL.revokeObjectURL !== "function"
+  ) {
+    return false;
+  }
+
+  let worker: Worker | null = null;
+  let workerUrl: string | null = null;
+
+  try {
+    workerUrl = URL.createObjectURL(
+      new Blob(["postMessage('ready');"], { type: "text/javascript" }),
+    );
+    worker = new Worker(workerUrl, { type: "module" });
+    worker.terminate();
+    URL.revokeObjectURL(workerUrl);
+    return true;
+  } catch {
+    if (worker) {
+      worker.terminate();
+    }
+    if (workerUrl) {
+      URL.revokeObjectURL(workerUrl);
+    }
+    return false;
+  }
+}
+
+function inspectRuntimeSupport(): RuntimeSupport {
+  const hasWindow = typeof window !== "undefined";
+  const crossOriginIsolated = hasWindow && window.crossOriginIsolated;
+  const secureContext = hasWindow && window.isSecureContext;
+  const hasSharedArrayBuffer = typeof SharedArrayBuffer !== "undefined";
+  const hasWorker = typeof Worker !== "undefined";
+  const hasModuleWorkers = checkModuleWorkerSupport();
+
+  const diagnostics = [
+    {
+      label: "Cross-origin isolated",
+      value: crossOriginIsolated ? "Yes" : "No",
+    },
+    {
+      label: "SharedArrayBuffer",
+      value: hasSharedArrayBuffer ? "Available" : "Missing",
+    },
+    {
+      label: "Web workers",
+      value: hasWorker ? "Available" : "Missing",
+    },
+    {
+      label: "Module workers",
+      value: hasModuleWorkers ? "Available" : "Missing",
+    },
+    {
+      label: "Secure context",
+      value: secureContext ? "Yes" : "No",
+    },
+  ];
+
+  if (
+    crossOriginIsolated &&
+    hasSharedArrayBuffer &&
+    hasWorker &&
+    hasModuleWorkers
+  ) {
+    return {
+      diagnostics,
+      isSupported: true,
+    };
+  }
+
+  return {
+    diagnostics,
+    isSupported: false,
+    message:
+      "This browser cannot start the threaded GBA emulator. In-app browsers often block SharedArrayBuffer, module workers, or cross-origin isolation even when the page headers are correct.",
+  };
+}
+
+function bootEmulator(canvas: HTMLCanvasElement) {
+  return new Promise<mGBAEmulator>((resolve, reject) => {
+    const timeoutId = window.setTimeout(() => {
+      reject(
+        new Error(
+          "The emulator worker never finished booting. This usually means the current browser or in-app browser does not fully support the threaded wasm runtime.",
+        ),
+      );
+    }, EMULATOR_BOOT_TIMEOUT_MS);
+
+    void mGBA({ canvas })
+      .then((module) => {
+        window.clearTimeout(timeoutId);
+        resolve(module);
+      })
+      .catch((error) => {
+        window.clearTimeout(timeoutId);
+        reject(error);
+      });
   });
 }
 
@@ -99,8 +215,8 @@ function TouchControl({
 export function PokemonBrisbaneGame() {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const emulatorRef = useRef<mGBAEmulator | null>(null);
-  const didInitRef = useRef(false);
   const [emulator, setEmulator] = useState<mGBAEmulator | null>(null);
+  const [diagnostics, setDiagnostics] = useState<RuntimeDiagnostic[]>([]);
   const [loadState, setLoadState] = useState<LoadState>("booting");
   const [statusCopy, setStatusCopy] = useState("Booting the Brisbane cabinet...");
   const [isPaused, setIsPaused] = useState(false);
@@ -108,16 +224,23 @@ export function PokemonBrisbaneGame() {
 
   useEffect(() => {
     const canvas = canvasRef.current;
-    if (!canvas || didInitRef.current) {
+    if (!canvas) {
       return;
     }
 
-    didInitRef.current = true;
     let cancelled = false;
 
     const initialize = async () => {
       try {
-        const module = await mGBA({ canvas });
+        const support = inspectRuntimeSupport();
+        setDiagnostics(support.diagnostics);
+        if (!support.isSupported) {
+          setLoadState("error");
+          setStatusCopy(support.message ?? "The emulator runtime is unavailable.");
+          return;
+        }
+
+        const module = await bootEmulator(canvas);
         if (cancelled) {
           return;
         }
@@ -164,10 +287,15 @@ export function PokemonBrisbaneGame() {
       }
     };
 
-    void initialize();
+    // Delay startup one tick so React StrictMode's dev-only double mount
+    // cleans up the first pass before we spin up threaded wasm workers.
+    const bootTimerId = window.setTimeout(() => {
+      void initialize();
+    }, 0);
 
     return () => {
       cancelled = true;
+      window.clearTimeout(bootTimerId);
       const instance = emulatorRef.current;
       if (!instance) {
         return;
@@ -229,16 +357,6 @@ export function PokemonBrisbaneGame() {
   return (
     <div className="pokemon-brisbane-layout">
       <div className="pokemon-brisbane-stage">
-        <div className="pokemon-stage-status">
-          <div className={`pokemon-status-pill ${loadState}`}>
-            {loadState === "booting" && "Booting"}
-            {loadState === "loading" && "Loading"}
-            {loadState === "ready" && "Ready"}
-            {loadState === "error" && "Error"}
-          </div>
-          <p>{statusCopy}</p>
-        </div>
-
         <div className="pokemon-canvas-shell">
           <div className="pokemon-canvas-bezel">
             <canvas
@@ -252,7 +370,7 @@ export function PokemonBrisbaneGame() {
             />
             {loadState !== "ready" ? (
               <div className="pokemon-screen-overlay">
-                <strong>OpenPlay Brisbane Cabinet</strong>
+                <strong>Pokemon FireRed - Brisbane Mod 1.0</strong>
                 <span>{statusCopy}</span>
               </div>
             ) : null}
@@ -289,29 +407,7 @@ export function PokemonBrisbaneGame() {
             </button>
           </div>
 
-          <p className="pokemon-stage-note">
-            This page auto-loads the local ROM generated into
-            <code> public/local-roms/</code> and keeps save data in your browser.
-          </p>
-        </div>
-      </div>
-
-      <div className="pokemon-support-grid">
-        <section className="pokemon-panel">
-          <p className="instruction-label">Brisbane map</p>
-          <div className="suburb-grid">
-            {brisbaneTownMappings.map((mapping) => (
-              <article className="suburb-card" key={mapping.original}>
-                <span>{mapping.original}</span>
-                <strong>{mapping.brisbane}</strong>
-              </article>
-            ))}
-          </div>
-        </section>
-
-        <section className="pokemon-panel">
-          <p className="instruction-label">Controls</p>
-          <div className="pokemon-controls-grid">
+          <div className="pokemon-controls-grid minimal">
             <div className="dpad-cluster">
               <TouchControl
                 className="up"
@@ -366,16 +462,7 @@ export function PokemonBrisbaneGame() {
               />
             </div>
           </div>
-
-          <div className="keyboard-grid">
-            {keyboardShortcuts.map((shortcut) => (
-              <div className="keyboard-chip" key={shortcut.action}>
-                <span>{shortcut.action}</span>
-                <strong>{shortcut.shortcut}</strong>
-              </div>
-            ))}
-          </div>
-        </section>
+        </div>
       </div>
 
       {loadState === "error" ? (

@@ -3,6 +3,9 @@ import react from "@vitejs/plugin-react";
 
 export default defineConfig({
   plugins: [react()],
+  optimizeDeps: {
+    exclude: ["@thenick775/mgba-wasm"],
+  },
   server: {
     headers: {
       "Cross-Origin-Embedder-Policy": "require-corp",

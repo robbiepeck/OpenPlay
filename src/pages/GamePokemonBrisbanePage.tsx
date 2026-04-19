@@ -1,28 +1,19 @@
-import { GameShell } from "../components/GameShell";
 import { SiteFrame } from "../components/SiteFrame";
 import { PokemonBrisbaneGame } from "../games/pokemon-brisbane/PokemonBrisbaneGame";
+import { Link } from "react-router-dom";
 
 export function GamePokemonBrisbanePage() {
   return (
     <SiteFrame compact>
-      <GameShell
-        aside={
-          <div className="instruction-card">
-            <p className="instruction-label">What changed</p>
-            <ul>
-              <li>The Kanto hubs are renamed after Brisbane suburbs.</li>
-              <li>Professor Oak is rewritten as Andrew Peck.</li>
-              <li>The patched ROM stays local and is not checked into git.</li>
-              <li>Saves persist in-browser for this cabinet.</li>
-            </ul>
-          </div>
-        }
-        description="A private FireRed cabinet wired into OpenPlay with a locally generated ROM, Brisbane suburb names across the region, and Andrew Peck replacing Professor Oak."
-        eyebrow="Local ROM build"
-        title="Pokemon FireRed: Brisbane Edition"
-      >
+      <div className="pokemon-page-simple">
+        <div className="pokemon-page-simple-header">
+          <Link className="back-link" to="/">
+            Back to portal
+          </Link>
+          <h1>Pokemon FireRed - Brisbane Mod 1.0</h1>
+        </div>
         <PokemonBrisbaneGame />
-      </GameShell>
+      </div>
     </SiteFrame>
   );
 }

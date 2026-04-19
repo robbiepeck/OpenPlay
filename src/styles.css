@@ -784,6 +784,27 @@ button {
   gap: 20px;
 }
 
+.pokemon-page-simple {
+  display: grid;
+  gap: 18px;
+  margin: 0 auto;
+  max-width: 1180px;
+  padding-bottom: 48px;
+}
+
+.pokemon-page-simple-header {
+  display: grid;
+  gap: 10px;
+}
+
+.pokemon-page-simple-header h1 {
+  margin: 0;
+  font-family: "Baskerville", "Times New Roman", serif;
+  font-size: clamp(2.3rem, 4vw, 4.2rem);
+  line-height: 0.95;
+  letter-spacing: -0.04em;
+}
+
 .pokemon-brisbane-stage,
 .pokemon-panel {
   border: 1px solid var(--border);
@@ -954,6 +975,10 @@ button {
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 18px;
   align-items: center;
+}
+
+.pokemon-controls-grid.minimal {
+  padding-top: 4px;
 }
 
 .dpad-cluster {
