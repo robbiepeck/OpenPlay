@@ -27,7 +27,7 @@ export function HomePage() {
         <div className="hero-display" aria-hidden="true">
           <div className="hero-stat-card">
             <span>Playable now</span>
-            <strong>4 games</strong>
+            <strong>3 games</strong>
           </div>
           <div className="hero-stat-card">
             <span>Arcade type</span>
@@ -65,8 +65,8 @@ export function HomePage() {
             its own space while still feeling part of one public arcade.
           </p>
           <p>
-            This workspace now includes 2048, Minesweeper, Snake, and a private
-            Brisbane-themed Pokemon FireRed cabinet built for local play.
+            This workspace now includes three browser-first staples: 2048,
+            Minesweeper, and Snake.
           </p>
         </div>
       </section>
